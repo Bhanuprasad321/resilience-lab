@@ -1,0 +1,14 @@
+{
+  "name": "resilience-lab",
+  "version": "1.0.0",
+  "description": "Mini Store - Resilience Lab benchmarking and testing suite",
+  "scripts": {
+    "seed": "node scripts/seed.js",
+    "test:load": "node scripts/load-test.js"
+  },
+  "dependencies": {
+    "autocannon": "^7.15.0",
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.3.2"
+  }
+}
