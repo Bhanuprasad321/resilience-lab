@@ -71,12 +71,31 @@ function generateProduct(index) {
   };
 }
 
+async function connectToMongo() {
+  const initialUri = process.env.MONGO_URI || 'mongodb://localhost:27017/resilience_lab';
+  console.log(`Connecting to MongoDB at: ${initialUri}`);
+  try {
+    await mongoose.connect(initialUri, {
+      serverSelectionTimeoutMS: 3000,
+    });
+    console.log('Connected to MongoDB successfully.');
+  } catch (err) {
+    // If run on host machine, 'mongo' hostname fails to resolve -> fallback to localhost
+    if (initialUri.includes('//mongo') || (err.message && err.message.includes('ENOTFOUND'))) {
+      const fallbackUri = initialUri.replace('//mongo', '//localhost');
+      console.log(`Host DNS cannot resolve 'mongo'. Falling back to local port: ${fallbackUri}`);
+      await mongoose.connect(fallbackUri, {
+        serverSelectionTimeoutMS: 5000,
+      });
+      console.log('Connected to MongoDB on localhost successfully.');
+      return;
+    }
+    throw err;
+  }
+}
+
 async function seed() {
-  console.log(`Connecting to MongoDB at: ${MONGO_URI}`);
-  await mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 5000,
-  });
-  console.log('Connected to MongoDB successfully.');
+  await connectToMongo();
 
   // Idempotency: drop collection before reseeding
   try {
