@@ -21,12 +21,16 @@ Under 20 concurrent connections on a CPU-constrained instance (`0.5` CPU limit):
 - Constrained the container CPU to `0.5` cores via Docker Compose resource limits.
 
 #### 3. What happened (Measured Baseline Results)
-*Run `npm run test:load` to populate exact metrics recorded into `results/data/baseline-list.json` and `results/data/baseline-search.json`.*
+*Recorded metrics from `results/data/baseline-list.json` and `results/data/baseline-search.json`:*
 
-| Endpoint | Concurrency | Duration | CPU Limit | Req/s (avg) | p50 Latency (ms) | p99 Latency (ms) | Error Rate (%) |
-|---|---|---|---|---|---|---|---|
-| `GET /products?limit=20` | 20 | 20s | 0.5 | *Pending test run* | *Pending test run* | *Pending test run* | *Pending test run* |
-| `GET /products?search=wireless` | 20 | 20s | 0.5 | *Pending test run* | *Pending test run* | *Pending test run* | *Pending test run* |
+| Endpoint | Concurrency | Duration | CPU Limit | Req/s (avg) | p50 Latency (ms) | p99 Latency (ms) | Max Latency (ms) | Error Rate (%) | Total Requests |
+|---|---|---|---|---|---|---|---|---|---|
+| `GET /products?limit=20` | 20 | 20s | 0.5 | **86.35** | **199** | **593** | 1617 | 0.0% | 1,727 |
+| `GET /products?search=wireless` | 20 | 20s | 0.5 | **129.45** | **121** | **380** | 950 | 0.0% | 2,589 |
+
+- **Single instance bottleneck**: With CPU constrained to `0.5` cores, the single Express instance saturated around 86–129 req/s with tail latencies exceeding half a second to 1.6 seconds.
+- **Memory & Serialization**: Serializing and transmitting 20 multi-sentence documents under concurrency on 0.5 CPU creates sustained event-loop queuing.
+- **Unindexed Scan**: While early-matching regex matches return once the limit (20) is met, any broader query or cache miss requires a full collection scan across all 50,000 documents without database index support.
 
 #### 4. What I changed
 *(Phase 1 establishes the baseline; improvements such as MongoDB compound text indexing, horizontal scaling with Nginx, and Redis caching will be implemented and measured in Phase 2).*
