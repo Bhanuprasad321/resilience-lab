@@ -11,6 +11,7 @@ const productsRoute = require('./routes/products');
 const authRoute = require('./routes/auth');
 const cartRoute = require('./routes/cart');
 const checkoutRoute = require('./routes/checkout');
+const reportRoute = require('./routes/report');
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/products', productsRoute);
 app.use('/auth', authRoute);
 app.use('/cart', cartRoute);
 app.use('/checkout', checkoutRoute);
+app.use('/report', reportRoute);
 
 // 404 handler
 app.use((req, res) => {

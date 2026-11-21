@@ -30,6 +30,7 @@ services:
       MONGO_URI: mongodb://mongo:27017/resilience_lab
       SESSION_SECRET: resilience-lab-secret-key-12345
       LOG_LEVEL: info
+      REPORT_WORK_ITERATIONS: ${REPORT_WORK_ITERATIONS:-40000}
     deploy:
       resources:
         limits:

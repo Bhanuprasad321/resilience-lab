@@ -9,7 +9,8 @@ const DURATION = parseInt(process.env.LOAD_TEST_DURATION, 10) || 20;
 const WARMUP_DURATION = parseInt(process.env.LOAD_TEST_WARMUP, 10) || 5;
 const COOLDOWN_DURATION = parseInt(process.env.LOAD_TEST_COOLDOWN, 10) || 5;
 
-const BENCHMARK_PREFIX = process.env.BENCHMARK_PREFIX || 'p2-step1-';
+const BENCHMARK_TITLE = process.env.BENCHMARK_TITLE || 'PHASE 2 - STEP 2 (CPU-BOUND REPORT)';
+const BENCHMARK_PREFIX = process.env.BENCHMARK_PREFIX || 'p2-step2-';
 const RESULTS_DIR = path.join(__dirname, '..', 'results', 'data');
 
 if (!fs.existsSync(RESULTS_DIR)) {
@@ -124,7 +125,7 @@ async function runBenchmarkSuite(benchmark) {
 }
 
 async function main() {
-  console.log(`Starting Phase 1 Baseline Load Tests against: ${TARGET_URL}`);
+  console.log(`Starting Load Tests: ${BENCHMARK_TITLE} against: ${TARGET_URL}`);
   console.log(`Configuration: Connections=${CONNECTIONS}, Duration=${DURATION}s, Warmup=${WARMUP_DURATION}s, Cooldown=${COOLDOWN_DURATION}s\n`);
 
   const benchmarks = [
@@ -146,6 +147,12 @@ async function main() {
       endpoint: '/products?search=zzzxqy&limit=20',
       outputFile: `${BENCHMARK_PREFIX}search-fullscan.json`,
     },
+    {
+      name: 'CPU-Bound Report Path',
+      description: 'Synchronous CPU hashing workload (~50ms computation)',
+      endpoint: '/report',
+      outputFile: `${BENCHMARK_PREFIX}report.json`,
+    },
   ];
 
   const results = [];
@@ -163,7 +170,7 @@ async function main() {
 
   // Comparison Summary Table
   console.log('\n========================================================================================');
-  console.log('                          PHASE 1 BASELINE BENCHMARK SUMMARY                            ');
+  console.log(`                    BENCHMARK SUMMARY (${BENCHMARK_TITLE})              `);
   console.log('========================================================================================');
   console.table(
     results.map((res) => ({
