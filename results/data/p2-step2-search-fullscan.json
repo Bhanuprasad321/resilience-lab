@@ -1,0 +1,38 @@
+{
+  "endpoint": "/products?search=zzzxqy&limit=20",
+  "parameters": {
+    "url": "http://localhost:3000/products?search=zzzxqy&limit=20",
+    "connections": 20,
+    "duration": 20,
+    "warmupDuration": 5,
+    "cpuLimits": {
+      "app": "0.5",
+      "mongo": "1.0"
+    },
+    "description": "Indexed search on zero-match term ($text token lookup)"
+  },
+  "metrics": {
+    "requestsPerSecond": {
+      "average": 529.1,
+      "mean": 529.1,
+      "max": 562
+    },
+    "latencyMs": {
+      "p50": 17,
+      "p90": 78,
+      "p99": 100,
+      "max": 169
+    },
+    "errorRate": 0,
+    "totalRequests": 10582,
+    "totalErrors": 0,
+    "timeouts": 0,
+    "non2xx": 0,
+    "statusCodes": {
+      "2xx": 10582,
+      "4xx": 0,
+      "5xx": 0
+    }
+  },
+  "timestamp": "2026-11-21T11:51:53.051Z"
+}

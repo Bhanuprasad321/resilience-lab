@@ -1,0 +1,38 @@
+{
+  "endpoint": "/report",
+  "parameters": {
+    "url": "http://localhost:3000/report",
+    "connections": 20,
+    "duration": 20,
+    "warmupDuration": 5,
+    "cpuLimits": {
+      "app": "0.5",
+      "mongo": "1.0"
+    },
+    "description": "Synchronous CPU hashing workload (~50ms computation)"
+  },
+  "metrics": {
+    "requestsPerSecond": {
+      "average": 14.05,
+      "mean": 14.05,
+      "max": 15
+    },
+    "latencyMs": {
+      "p50": 1270,
+      "p90": 1473,
+      "p99": 6895,
+      "max": 9255
+    },
+    "errorRate": 1.42,
+    "totalRequests": 281,
+    "totalErrors": 2,
+    "timeouts": 2,
+    "non2xx": 0,
+    "statusCodes": {
+      "2xx": 281,
+      "4xx": 0,
+      "5xx": 0
+    }
+  },
+  "timestamp": "2026-11-21T11:52:24.329Z"
+}
