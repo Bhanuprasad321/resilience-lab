@@ -7,12 +7,19 @@ const TARGET_URL = process.env.TARGET_URL || 'http://localhost:3000';
 const CONNECTIONS = parseInt(process.env.LOAD_TEST_CONNECTIONS, 10) || 20;
 const DURATION = parseInt(process.env.LOAD_TEST_DURATION, 10) || 20;
 const WARMUP_DURATION = parseInt(process.env.LOAD_TEST_WARMUP, 10) || 5;
+const COOLDOWN_DURATION = parseInt(process.env.LOAD_TEST_COOLDOWN, 10) || 5;
 
 const RESULTS_DIR = path.join(__dirname, '..', 'results', 'data');
 
 if (!fs.existsSync(RESULTS_DIR)) {
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
 }
+
+const sleep = (seconds) =>
+  new Promise((resolve) => {
+    console.log(`\n[Cooldown] Waiting ${seconds}s between benchmarks for connections and event loop to settle...`);
+    setTimeout(resolve, seconds * 1000);
+  });
 
 function runAutocannon(opts, label) {
   return new Promise((resolve, reject) => {
@@ -38,17 +45,22 @@ function extractMetrics(result, endpoint, extraParams = {}) {
   const max = result.latency ? result.latency.max : 0;
   const totalRequests = result.requests ? result.requests.total : 0;
   const totalErrors = result.errors || 0;
+  const timeouts = result.timeouts || 0;
   const non2xx = result.non2xx || 0;
-  const totalFailures = totalErrors + non2xx;
+  const totalFailures = totalErrors + timeouts + non2xx;
   const errorRate = totalRequests > 0 ? ((totalFailures / totalRequests) * 100).toFixed(2) : 0;
 
   return {
     endpoint,
     parameters: {
+      url: `${TARGET_URL}${endpoint}`,
       connections: CONNECTIONS,
       duration: DURATION,
       warmupDuration: WARMUP_DURATION,
-      cpuLimit: '0.5',
+      cpuLimits: {
+        app: '0.5',
+        mongo: '1.0',
+      },
       ...extraParams,
     },
     metrics: {
@@ -66,71 +78,106 @@ function extractMetrics(result, endpoint, extraParams = {}) {
       errorRate: parseFloat(errorRate),
       totalRequests,
       totalErrors,
+      timeouts,
       non2xx,
+      statusCodes: {
+        '2xx': result['2xx'] || result.res2xx || 0,
+        '4xx': result['4xx'] || result.res4xx || 0,
+        '5xx': result['5xx'] || result.res5xx || 0,
+      },
     },
     timestamp: new Date().toISOString(),
   };
 }
 
-async function main() {
-  console.log(`Starting Phase 1 Baseline Load Tests against: ${TARGET_URL}`);
-  console.log(`Configuration: Connections=${CONNECTIONS}, Duration=${DURATION}s, Warmup=${WARMUP_DURATION}s\n`);
+async function runBenchmarkSuite(benchmark) {
+  const fullUrl = `${TARGET_URL}${benchmark.endpoint}`;
 
-  // 1. Warm-up phase
-  console.log(`[Warm-up] Priming connection pool and JIT for ${WARMUP_DURATION}s...`);
+  // 1. Warm up benchmark's own endpoint
+  console.log(`\n[Warm-up] Warming up ${fullUrl} for ${WARMUP_DURATION}s...`);
   await runAutocannon({
-    url: `${TARGET_URL}/health`,
+    url: fullUrl,
     connections: 5,
     duration: WARMUP_DURATION,
-  }, 'WARM-UP');
+  }, `WARM-UP: ${benchmark.name}`);
 
-  // 2. Test 1: Fast Path - GET /products?limit=20
-  const listResult = await runAutocannon({
-    url: `${TARGET_URL}/products?limit=20`,
+  // Brief pause after warmup to let sockets reset
+  await new Promise((r) => setTimeout(r, 1000));
+
+  // 2. Run actual measurement
+  const result = await runAutocannon({
+    url: fullUrl,
     connections: CONNECTIONS,
     duration: DURATION,
-  }, 'TEST 1: LIST PRODUCTS (FAST PATH)');
+  }, `BENCHMARK: ${benchmark.name}`);
 
-  const listMetrics = extractMetrics(listResult, '/products?limit=20');
-  const listFilePath = path.join(RESULTS_DIR, 'baseline-list.json');
-  fs.writeFileSync(listFilePath, JSON.stringify(listMetrics, null, 2), 'utf-8');
-  console.log(`Saved list test metrics to: ${listFilePath}`);
+  const metrics = extractMetrics(result, benchmark.endpoint, {
+    description: benchmark.description,
+  });
 
-  // 3. Test 2: Slow Path - GET /products?search=wireless (unindexed regex scan across 50,000 multi-sentence documents)
-  const searchResult = await runAutocannon({
-    url: `${TARGET_URL}/products?search=wireless`,
-    connections: CONNECTIONS,
-    duration: DURATION,
-  }, 'TEST 2: UNINDEXED SEARCH (BOTTLENECK PATH)');
+  const filePath = path.join(RESULTS_DIR, benchmark.outputFile);
+  fs.writeFileSync(filePath, JSON.stringify(metrics, null, 2), 'utf-8');
+  console.log(`Saved metrics to: ${filePath}`);
 
-  const searchMetrics = extractMetrics(searchResult, '/products?search=wireless');
-  const searchFilePath = path.join(RESULTS_DIR, 'baseline-search.json');
-  fs.writeFileSync(searchFilePath, JSON.stringify(searchMetrics, null, 2), 'utf-8');
-  console.log(`Saved search test metrics to: ${searchFilePath}`);
+  return metrics;
+}
 
-  // 4. Comparison Summary Table
-  console.log('\n========================================================================');
-  console.log('                   PHASE 1 BASELINE BENCHMARK SUMMARY                   ');
-  console.log('========================================================================');
-  console.table([
+async function main() {
+  console.log(`Starting Phase 1 Baseline Load Tests against: ${TARGET_URL}`);
+  console.log(`Configuration: Connections=${CONNECTIONS}, Duration=${DURATION}s, Warmup=${WARMUP_DURATION}s, Cooldown=${COOLDOWN_DURATION}s\n`);
+
+  const benchmarks = [
     {
-      'Endpoint': listMetrics.endpoint,
-      'Throughput (req/s)': listMetrics.metrics.requestsPerSecond.average.toFixed(1),
-      'Latency p50 (ms)': listMetrics.metrics.latencyMs.p50,
-      'Latency p99 (ms)': listMetrics.metrics.latencyMs.p99,
-      'Error Rate (%)': `${listMetrics.metrics.errorRate}%`,
-      'Total Reqs': listMetrics.metrics.totalRequests,
+      name: 'List Products (Fast Path)',
+      description: 'Standard product pagination without search filter',
+      endpoint: '/products?limit=20',
+      outputFile: 'baseline-list.json',
     },
     {
-      'Endpoint': searchMetrics.endpoint,
-      'Throughput (req/s)': searchMetrics.metrics.requestsPerSecond.average.toFixed(1),
-      'Latency p50 (ms)': searchMetrics.metrics.latencyMs.p50,
-      'Latency p99 (ms)': searchMetrics.metrics.latencyMs.p99,
-      'Error Rate (%)': `${searchMetrics.metrics.errorRate}%`,
-      'Total Reqs': searchMetrics.metrics.totalRequests,
+      name: 'Common Search (Early Exit)',
+      description: 'Unindexed search on high-frequency term that satisfies limit early',
+      endpoint: '/products?search=wireless&limit=20',
+      outputFile: 'baseline-search-common.json',
     },
-  ]);
-  console.log('========================================================================\n');
+    {
+      name: 'Full-Scan Search (True Bottleneck)',
+      description: 'Unindexed search on zero-match term forcing full 50,000 document regex scan',
+      endpoint: '/products?search=zzzxqy&limit=20',
+      outputFile: 'baseline-search-fullscan.json',
+    },
+  ];
+
+  const results = [];
+
+  for (let i = 0; i < benchmarks.length; i++) {
+    const bench = benchmarks[i];
+    const metrics = await runBenchmarkSuite(bench);
+    results.push(metrics);
+
+    // Cooldown pause between benchmarks (except after the final benchmark)
+    if (i < benchmarks.length - 1) {
+      await sleep(COOLDOWN_DURATION);
+    }
+  }
+
+  // Comparison Summary Table
+  console.log('\n========================================================================================');
+  console.log('                          PHASE 1 BASELINE BENCHMARK SUMMARY                            ');
+  console.log('========================================================================================');
+  console.table(
+    results.map((res) => ({
+      'Endpoint': res.endpoint,
+      'Throughput (req/s)': res.metrics.requestsPerSecond.average.toFixed(1),
+      'Latency p50 (ms)': res.metrics.latencyMs.p50,
+      'Latency p99 (ms)': res.metrics.latencyMs.p99,
+      'Max Latency (ms)': res.metrics.latencyMs.max,
+      'Timeouts': res.metrics.timeouts,
+      'Errors': res.metrics.totalErrors,
+      'Error Rate (%)': `${res.metrics.errorRate}%`,
+      'Total Reqs': res.metrics.totalRequests,
+    }))
+  );
+  console.log('========================================================================================\n');
 }
 
 main().catch((err) => {

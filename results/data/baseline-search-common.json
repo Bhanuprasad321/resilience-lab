@@ -1,0 +1,38 @@
+{
+  "endpoint": "/products?search=wireless&limit=20",
+  "parameters": {
+    "url": "http://localhost:3000/products?search=wireless&limit=20",
+    "connections": 20,
+    "duration": 20,
+    "warmupDuration": 5,
+    "cpuLimits": {
+      "app": "0.5",
+      "mongo": "1.0"
+    },
+    "description": "Unindexed search on high-frequency term that satisfies limit early"
+  },
+  "metrics": {
+    "requestsPerSecond": {
+      "average": 362.95,
+      "mean": 362.95,
+      "max": 406
+    },
+    "latencyMs": {
+      "p50": 72,
+      "p90": 88,
+      "p99": 172,
+      "max": 260
+    },
+    "errorRate": 0,
+    "totalRequests": 7259,
+    "totalErrors": 0,
+    "timeouts": 0,
+    "non2xx": 0,
+    "statusCodes": {
+      "2xx": 7259,
+      "4xx": 0,
+      "5xx": 0
+    }
+  },
+  "timestamp": "2026-11-21T10:30:01.422Z"
+}

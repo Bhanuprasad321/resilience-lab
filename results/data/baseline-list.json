@@ -1,27 +1,38 @@
 {
   "endpoint": "/products?limit=20",
   "parameters": {
+    "url": "http://localhost:3000/products?limit=20",
     "connections": 20,
     "duration": 20,
     "warmupDuration": 5,
-    "cpuLimit": "0.5"
+    "cpuLimits": {
+      "app": "0.5",
+      "mongo": "1.0"
+    },
+    "description": "Standard product pagination without search filter"
   },
   "metrics": {
     "requestsPerSecond": {
-      "average": 86.35,
-      "mean": 86.35,
-      "max": 129
+      "average": 290.5,
+      "mean": 290.5,
+      "max": 384
     },
     "latencyMs": {
-      "p50": 199,
-      "p90": 388,
-      "p99": 593,
-      "max": 1617
+      "p50": 79,
+      "p90": 102,
+      "p99": 191,
+      "max": 526
     },
     "errorRate": 0,
-    "totalRequests": 1727,
+    "totalRequests": 5810,
     "totalErrors": 0,
-    "non2xx": 0
+    "timeouts": 0,
+    "non2xx": 0,
+    "statusCodes": {
+      "2xx": 5810,
+      "4xx": 0,
+      "5xx": 0
+    }
   },
-  "timestamp": "2026-11-20T16:16:24.189Z"
+  "timestamp": "2026-11-21T10:29:30.304Z"
 }
