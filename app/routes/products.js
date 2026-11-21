@@ -2,11 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 
-// Escape regex special characters to prevent ReDoS or invalid regex syntax errors
-function escapeRegex(text) {
-  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-}
-
 // GET /products - list products; supports ?search= and ?limit=
 router.get('/', async (req, res, next) => {
   try {
@@ -15,15 +10,8 @@ router.get('/', async (req, res, next) => {
 
     let filter = {};
     if (search) {
-      const safeRegex = new RegExp(escapeRegex(search), 'i');
-      // Intentionally unindexed search over 50,000 documents:
-      // Forces a full collection scan across multi-sentence text on each query
-      filter = {
-        $or: [
-          { name: safeRegex },
-          { description: safeRegex },
-        ],
-      };
+      // Phase 2 - Step 1: Inverted text index search ($text) replaces unindexed $regex COLLSCAN
+      filter = { $text: { $search: search } };
     }
 
     const products = await Product.find(filter).limit(limit).lean();

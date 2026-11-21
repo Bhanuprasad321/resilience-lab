@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
 
-// Deliberately NO indexes on name or description in Phase 1 Baseline!
-// This causes queries with ?search= to trigger full collection scans (COLLSCAN)
-// across 50,000 documents, producing measurable CPU saturation and latency spikes.
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -29,5 +26,12 @@ const productSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Phase 2 - Step 1: Compound Text Index on name and description
+// Replaces the unindexed full collection regex scan with an inverted token index
+productSchema.index(
+  { name: 'text', description: 'text' },
+  { weights: { name: 3, description: 1 }, name: 'ProductTextIndex' }
+);
 
 module.exports = mongoose.model('Product', productSchema);

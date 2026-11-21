@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 750" width="1300" height="750" style="background:#0b0c10; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Card Drop Shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="125%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+    
+    <!-- Cylinder Gradient: MongoDB -->
+    <linearGradient id="mongoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14a074"/>
+      <stop offset="50%" stop-color="#20c997"/>
+      <stop offset="100%" stop-color="#12b886"/>
+    </linearGradient>
+    <linearGradient id="mongoTopGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#63e6be"/>
+      <stop offset="100%" stop-color="#38d9a9"/>
+    </linearGradient>
+
+    <!-- Cylinder Gradient: Volume -->
+    <linearGradient id="volGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b9a52"/>
+      <stop offset="50%" stop-color="#51cf66"/>
+      <stop offset="100%" stop-color="#40c057"/>
+    </linearGradient>
+    <linearGradient id="volTopGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8ce99a"/>
+      <stop offset="100%" stop-color="#69db7c"/>
+    </linearGradient>
+
+    <!-- Arrow Marker (Green Neon) -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Title & Subtitle Header -->
+  <text x="650" y="55" fill="#f8fafc" font-size="24" font-weight="800" text-anchor="middle" letter-spacing="0.5">Mini Store (Resilience Lab) — Architecture Phase 1</text>
+  <text x="650" y="85" fill="#64748b" font-size="14" font-weight="500" text-anchor="middle">Single-Instance Baseline: In-Memory Sessions &amp; Unindexed MongoDB Search (v1-baseline)</text>
+
+  <!-- Container Box: Docker Compose Environment -->
+  <rect x="360" y="130" width="880" height="570" rx="20" fill="#111318" stroke="#1f2430" stroke-width="2" stroke-dasharray="6,6"/>
+  <rect x="380" y="145" width="230" height="26" rx="6" fill="#1e222d"/>
+  <text x="495" y="162" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">DOCKER COMPOSE NETWORK</text>
+
+  <!-- ==================== COMPONENT 1: USERS / AUTOCANNON ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="320" width="220" height="110" rx="14" fill="#ff6b8b" stroke="#e05675" stroke-width="2"/>
+    <text x="170" y="362" fill="#0f172a" font-size="17" font-weight="800" text-anchor="middle">Users &amp; Autocannon</text>
+    <text x="170" y="386" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">Load Test Runner</text>
+    <text x="170" y="408" fill="#334155" font-size="11" font-weight="600" text-anchor="middle">20 Concurrent Connections</text>
+  </g>
+
+  <!-- Arrow 1: Users -> App Server -->
+  <path d="M 280 375 L 420 375" fill="none" stroke="#10b981" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <!-- Label on Arrow 1 -->
+  <rect x="300" y="347" width="100" height="22" rx="5" fill="#141820" stroke="#10b981" stroke-width="1.5"/>
+  <text x="350" y="362" fill="#34d399" font-size="11" font-weight="700" text-anchor="middle">HTTP :3000</text>
+
+  <!-- ==================== COMPONENT 2: APP SERVER ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="430" y="300" width="250" height="150" rx="14" fill="#00d2d3" stroke="#00b4b5" stroke-width="2"/>
+    <text x="555" y="338" fill="#042f2e" font-size="17" font-weight="800" text-anchor="middle">Single App Server</text>
+    <text x="555" y="362" fill="#115e59" font-size="13" font-weight="700" text-anchor="middle">Node.js 20 + Express</text>
+    <line x1="455" y1="375" x2="655" y2="375" stroke="#0f766e" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="555" y="396" fill="#134e4a" font-size="12" font-weight="700" text-anchor="middle">Container: resilience-app</text>
+    <text x="555" y="416" fill="#0f766e" font-size="12" font-weight="700" text-anchor="middle">CPU Limit: 0.5 Cores</text>
+    <text x="555" y="434" fill="#115e59" font-size="11" font-weight="600" text-anchor="middle">Header: X-Instance-Id</text>
+  </g>
+
+  <!-- Connector: App Server -> In-Memory Sessions (Branching Upwards) -->
+  <path d="M 555 300 L 555 240 Q 555 220 575 220 L 740 220" fill="none" stroke="#10b981" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="585" y="195" width="125" height="20" rx="4" fill="#141820" stroke="#10b981" stroke-width="1"/>
+  <text x="647" y="209" fill="#34d399" font-size="10" font-weight="700" text-anchor="middle">Session State</text>
+
+  <!-- ==================== COMPONENT 3: IN-MEMORY SESSIONS (ORANGE) ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="750" y="170" width="230" height="100" rx="14" fill="#ffa94d" stroke="#f7902a" stroke-width="2"/>
+    <text x="865" y="206" fill="#431407" font-size="15" font-weight="800" text-anchor="middle">In-Memory Sessions</text>
+    <text x="865" y="228" fill="#7c2d12" font-size="12" font-weight="700" text-anchor="middle">express-session (MemoryStore)</text>
+    <text x="865" y="250" fill="#9a3412" font-size="11" font-weight="600" text-anchor="middle">⚠️ State Bottleneck (Lost on reboot)</text>
+  </g>
+
+  <!-- Connector: App Server -> MongoDB (Branching Straight Right) -->
+  <path d="M 680 375 L 770 375" fill="none" stroke="#10b981" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <!-- Label on Arrow 2 -->
+  <rect x="685" y="347" width="80" height="22" rx="5" fill="#141820" stroke="#10b981" stroke-width="1.5"/>
+  <text x="725" y="362" fill="#34d399" font-size="10" font-weight="700" text-anchor="middle">Port 27017</text>
+
+  <!-- ==================== COMPONENT 4: MONGODB CYLINDER (MINT GREEN) ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Cylinder Body -->
+    <path d="M 780 340 L 780 430 A 100 24 0 0 0 980 430 L 980 340 Z" fill="url(#mongoGrad)" stroke="#12b886" stroke-width="2"/>
+    <!-- Cylinder Bottom Ellipse Arc -->
+    <ellipse cx="880" cy="430" rx="100" ry="24" fill="none" stroke="#0ca678" stroke-width="2"/>
+    <!-- Cylinder Top Cap Ellipse -->
+    <ellipse cx="880" cy="340" rx="100" ry="24" fill="url(#mongoTopGrad)" stroke="#12b886" stroke-width="2"/>
+    
+    <!-- Cylinder Text -->
+    <text x="880" y="380" fill="#042f2e" font-size="16" font-weight="800" text-anchor="middle">MongoDB 7 Instance</text>
+    <text x="880" y="400" fill="#0f5132" font-size="12" font-weight="700" text-anchor="middle">Container: resilience-mongo</text>
+    <text x="880" y="420" fill="#146c43" font-size="11" font-weight="700" text-anchor="middle">CPU Limit: 1.0 Cores (Single Node)</text>
+  </g>
+
+  <!-- Connector: MongoDB -> Persistent Volume (Branching Downwards) -->
+  <path d="M 880 460 L 880 500 Q 880 520 900 520 L 980 520" fill="none" stroke="#10b981" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="888" y="492" width="85" height="20" rx="4" fill="#141820" stroke="#10b981" stroke-width="1"/>
+  <text x="930" y="506" fill="#34d399" font-size="10" font-weight="700" text-anchor="middle">Data Volume</text>
+
+  <!-- ==================== COMPONENT 5: DATA VOLUME CYLINDER (GREEN) ==================== -->
+  <g filter="url(#shadow)">
+    <!-- Cylinder Body -->
+    <path d="M 990 480 L 990 570 A 100 24 0 0 0 1190 570 L 1190 480 Z" fill="url(#volGrad)" stroke="#40c057" stroke-width="2"/>
+    <ellipse cx="1090" cy="570" rx="100" ry="24" fill="none" stroke="#2b8a3e" stroke-width="2"/>
+    <ellipse cx="1090" cy="480" rx="100" ry="24" fill="url(#volTopGrad)" stroke="#40c057" stroke-width="2"/>
+
+    <!-- Cylinder Text -->
+    <text x="1090" y="518" fill="#052e16" font-size="15" font-weight="800" text-anchor="middle">mongo_data Volume</text>
+    <text x="1090" y="538" fill="#14532d" font-size="12" font-weight="700" text-anchor="middle">50,000 Seeded Products</text>
+    <text x="1090" y="558" fill="#166534" font-size="11" font-weight="700" text-anchor="middle">⚠️ Deliberate COLLSCAN (No Index)</text>
+  </g>
+
+  <!-- ==================== BOTTLENECK CALLOUT BADGE ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="430" y="590" width="760" height="75" rx="12" fill="#181920" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="445" y="605" width="80" height="22" rx="4" fill="#ef4444"/>
+    <text x="485" y="620" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">BOTTLENECK</text>
+    <text x="535" y="621" fill="#f87171" font-size="13" font-weight="700">Phase 1 Deliberate Bottlenecks:</text>
+    <text x="445" y="648" fill="#cbd5e1" font-size="12" font-weight="500">1. <tspan fill="#fca5a5" font-weight="700">Regex Query COLLSCAN</tspan>: Unindexed search across 50,000 products locks CPU under concurrency (?search=zzzxqy).</text>
+    <text x="895" y="648" fill="#cbd5e1" font-size="12" font-weight="500">2. <tspan fill="#fca5a5" font-weight="700">MemoryStore</tspan>: Single server state; sessions cannot scale horizontally.</text>
+  </g>
+</svg>

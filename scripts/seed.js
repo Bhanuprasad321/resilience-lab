@@ -15,6 +15,12 @@ const productSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Phase 2 Step 1: Text index definition matching app/models/Product.js
+productSchema.index(
+  { name: 'text', description: 'text' },
+  { weights: { name: 3, description: 1 }, name: 'ProductTextIndex' }
+);
+
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
 const CATEGORIES = ['Electronics', 'Home & Kitchen', 'Books', 'Clothing', 'Sports & Outdoors', 'Beauty & Health', 'Toys & Games'];
@@ -127,6 +133,11 @@ async function seed() {
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(`\nDone! Successfully seeded ${insertedCount.toLocaleString()} products in ${durationSec}s.`);
+
+  console.log('Ensuring database indexes are synchronized...');
+  await Product.syncIndexes();
+  const indexes = await Product.collection.indexes();
+  console.log('Active indexes on products collection:', indexes.map((idx) => idx.name));
 
   await mongoose.disconnect();
   console.log('Disconnected from MongoDB.');

@@ -9,6 +9,7 @@ const DURATION = parseInt(process.env.LOAD_TEST_DURATION, 10) || 20;
 const WARMUP_DURATION = parseInt(process.env.LOAD_TEST_WARMUP, 10) || 5;
 const COOLDOWN_DURATION = parseInt(process.env.LOAD_TEST_COOLDOWN, 10) || 5;
 
+const BENCHMARK_PREFIX = process.env.BENCHMARK_PREFIX || 'p2-step1-';
 const RESULTS_DIR = path.join(__dirname, '..', 'results', 'data');
 
 if (!fs.existsSync(RESULTS_DIR)) {
@@ -131,19 +132,19 @@ async function main() {
       name: 'List Products (Fast Path)',
       description: 'Standard product pagination without search filter',
       endpoint: '/products?limit=20',
-      outputFile: 'baseline-list.json',
+      outputFile: `${BENCHMARK_PREFIX}list.json`,
     },
     {
       name: 'Common Search (Early Exit)',
-      description: 'Unindexed search on high-frequency term that satisfies limit early',
+      description: 'Indexed search on common term',
       endpoint: '/products?search=wireless&limit=20',
-      outputFile: 'baseline-search-common.json',
+      outputFile: `${BENCHMARK_PREFIX}search-common.json`,
     },
     {
-      name: 'Full-Scan Search (True Bottleneck)',
-      description: 'Unindexed search on zero-match term forcing full 50,000 document regex scan',
+      name: 'Full-Scan Search Benchmark (Zero Match)',
+      description: 'Indexed search on zero-match term ($text token lookup)',
       endpoint: '/products?search=zzzxqy&limit=20',
-      outputFile: 'baseline-search-fullscan.json',
+      outputFile: `${BENCHMARK_PREFIX}search-fullscan.json`,
     },
   ];
 
